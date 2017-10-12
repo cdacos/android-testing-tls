@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.cdacos.testingtls.MainActivity">
+
+  <WebView
+      android:id="@+id/webview"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_alignParentLeft="true"
+      android:layout_alignParentTop="true"
+      android:layout_marginTop="20dp"
+      android:layout_marginBottom="20dp"
+      />
+
+  <TextView
+      android:id="@+id/help"
+      android:layout_width="match_parent"
+      android:layout_height="20dp"
+      android:text="Open Observatory by Mozilla's list of &quot;perfect&quot; sites"
+      android:background="#AAFFFFFF"
+      android:layout_alignParentLeft="true"
+      android:layout_alignParentTop="true"
+      android:onClick="openPerfectSites"
+      />
+
+  <EditText
+      android:id="@+id/testUrl"
+      android:layout_width="match_parent"
+      android:layout_height="20dp"
+      android:inputType="textPersonName"
+      android:text="https://mastodon.expert/"
+      android:background="#AAFFFFFF"
+      android:layout_alignParentLeft="true"
+      android:layout_alignParentBottom="true"
+      />
+
+  <Button android:id="@+id/togglefix"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="Fix"
+      android:onClick="toggleFix"
+      android:layout_alignParentRight="true"
+      android:layout_above="@id/testUrl"
+      />
+
+</RelativeLayout>
