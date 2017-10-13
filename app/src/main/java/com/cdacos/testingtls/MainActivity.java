@@ -1,5 +1,6 @@
 package com.cdacos.testingtls;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -13,6 +14,11 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.security.ProviderInstaller;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -25,7 +31,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ProviderInstaller.ProviderInstallListener {
   private final static String SHARED_PREFERENCES_NAME = "app";
   private final static String FIX_STATE = "FIX_STATE";
 
@@ -40,9 +46,9 @@ public class MainActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-    webView = (WebView)findViewById(R.id.webview);
-    sslSocketFactoryToggle = (Button)findViewById(R.id.sslSocketFactoryToggle);
-    testUrl = (EditText)findViewById(R.id.testUrl);
+    webView = findViewById(R.id.webview);
+    sslSocketFactoryToggle = findViewById(R.id.sslSocketFactoryToggle);
+    testUrl = findViewById(R.id.testUrl);
     sslSocketFactory = null;
 
     SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME, MODE_PRIVATE);
@@ -118,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
       request.connect();
       InputStream inputStream = request.getInputStream();
 
-      contents.append("<h1 style='color:#00AAAA;'>SUCCESS</h1>");
+      contents.append("<h1 style='color:#00AAAA;'>CONNECTION ALLOWED</h1>");
       loadContents(contents);
 
       if (inputStream != null) {
@@ -130,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
       }
     }
     catch (final Exception e) {
-      contents.append("<h1 style='color:#FF0000;'>FAILED</h1>");
+      contents.append("<h1 style='color:#FF0000;'>CONNECTION FAILED</h1>");
       contents.append(Log.getStackTraceString(e));
     }
     loadContents(contents);
@@ -149,4 +155,121 @@ public class MainActivity extends AppCompatActivity {
   public void openPerfectSites(View view) {
     startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://http-observatory.security.mozilla.org/api/v1/getRecentScans?min=135&num=25")));
   }
+
+  public void installGooglePlaySecurityProvider(View view) {
+    int availability = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
+    switch (availability) {
+      case ConnectionResult.SUCCESS:
+        Toast.makeText(this, "Google Play services SUCCESS (is available and up to date)", Toast.LENGTH_LONG).show();
+        ProviderInstaller.installIfNeededAsync(this, this);
+        break;
+      case ConnectionResult.SERVICE_MISSING:
+        Toast.makeText(this, "Google Play services SERVICE_MISSING", Toast.LENGTH_LONG).show();
+        break;
+      case ConnectionResult.SERVICE_UPDATING:
+        Toast.makeText(this, "Google Play services SERVICE_UPDATING", Toast.LENGTH_LONG).show();
+        ProviderInstaller.installIfNeededAsync(this, this);
+        break;
+      case ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED:
+        Toast.makeText(this, "Google Play services SERVICE_VERSION_UPDATE_REQUIRED", Toast.LENGTH_LONG).show();
+        ProviderInstaller.installIfNeededAsync(this, this);
+        break;
+      case ConnectionResult.SERVICE_DISABLED:
+        Toast.makeText(this, "Google Play services SERVICE_DISABLED", Toast.LENGTH_LONG).show();
+        break;
+      case ConnectionResult.SERVICE_INVALID:
+        Toast.makeText(this, "Google Play services SERVICE_INVALID", Toast.LENGTH_LONG).show();
+        break;
+      default:
+        Toast.makeText(this, "Google Play services ???" + Integer.toString(availability), Toast.LENGTH_LONG).show();
+    }
+  }
+
+  //region Google Play Security GMS Provider
+  // Taken from https://developer.android.com/training/articles/security-gms-provider.html
+  // Curious the mistakes that needed to be fixed to get this to compile.
+  // (The continuous loop when the upgrade fails...)
+  private static final int ERROR_DIALOG_REQUEST_CODE = 1;
+
+  private Boolean mRetryProviderInstall = null;
+
+  /**
+   * This method is only called if the provider is successfully updated
+   * (or is already up-to-date).
+   */
+  @Override
+  public void onProviderInstalled() {
+    Toast.makeText(this, "Google Play services updated and security provider installed.", Toast.LENGTH_LONG).show();
+    lastUrl = null;
+    downloadAsync(testUrl.getText().toString());
+  }
+
+  /**
+   * This method is called if updating fails; the error code indicates
+   * whether the error is recoverable.
+   */
+  @Override
+  public void onProviderInstallFailed(int errorCode, Intent recoveryIntent) {
+    if (GoogleApiAvailability.getInstance().isUserResolvableError(errorCode)) {
+      // Recoverable error. Show a dialog prompting the user to
+      // install/update/enable Google Play services.
+      GoogleApiAvailability.getInstance().showErrorDialogFragment(
+          this,
+          errorCode,
+          ERROR_DIALOG_REQUEST_CODE,
+          new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+              // The user chose not to take the recovery action
+              onProviderInstallerNotAvailable();
+            }
+          });
+    }
+    else {
+      // Google Play services is not available.
+      onProviderInstallerNotAvailable();
+    }
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode,
+                                  Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == ERROR_DIALOG_REQUEST_CODE) {
+      // Adding a fragment via GooglePlayServicesUtil.showErrorDialogFragment
+      // before the instance state is restored throws an error. So instead,
+      // set a flag here, which will cause the fragment to delay until
+      // onPostResume.
+      if (mRetryProviderInstall == null) {
+        mRetryProviderInstall = true;
+      }
+      else {
+        Toast.makeText(this, "Google Play services not updated and security provider could not be installed. Need to use DeprecatedTLSSocketFactory.", Toast.LENGTH_LONG).show();
+        // This is where your app would then fallback to using DeprecatedTLSSocketFactory
+      }
+    }
+  }
+
+  /**
+   * On resume, check to see if we flagged that we need to reinstall the
+   * provider.
+   */
+  @Override
+  protected void onPostResume() {
+    super.onPostResume();
+    if (mRetryProviderInstall != null && mRetryProviderInstall) {
+      mRetryProviderInstall = false;
+      // We can now safely retry installation.
+      ProviderInstaller.installIfNeededAsync(this, this);
+    }
+  }
+
+  private void onProviderInstallerNotAvailable() {
+    // This is reached if the provider cannot be updated for some reason.
+    // App should consider all HTTP communication to be vulnerable, and take
+    // appropriate action.
+    Toast.makeText(this, "Google Play services security provider could not be installed. Need to use DeprecatedTLSSocketFactory.", Toast.LENGTH_LONG).show();
+    // This is where your app would then fallback to using DeprecatedTLSSocketFactory
+  }
+  //endregion
 }
