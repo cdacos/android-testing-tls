@@ -1,4 +1,4 @@
-A simple Android app to test behaviour of pre-Lollipop (Android 5.0, SDK 21) with sites that
+A simple Android app to test behaviour of pre-Lollipop (Android 5.0, SDK 20) with sites that
 no longer support TLS 1.0. Between SDK 16 and 20, Android OS had the ciphers for TLS 1.2 but
 they were not enabled. The app is a demonstration of how to enable it for these OS versions.
 
@@ -7,23 +7,23 @@ Do not need any of this code.
 
 * Google Play services security provider
 See https://developer.android.com/training/articles/security-gms-provider.html
-This is best choice if your device has Google Play services installed. (e.g. You're not a
+This is the best choice if your device has Google Play services installed. (e.g. You're not a
 typical Amazon device user, or are based somewhere like China.)
-Note: the sample code "Updating Your Security Provider to Protect Against SSL Exploits" needed
+Note: the sample code in "Updating Your Security Provider to Protect Against SSL Exploits" needed
 some tweaking to work.
 
 * DeprecatedTLSSocketFactory
 See Florian Krauthan's excellent blog post:
 https://blog.dev-area.net/2015/08/13/android-4-1-enable-tls-1-1-and-tls-1-2/
-It's simply a simple wrapper around SSLSocketFactory which enables the protocol "TLSv1.2".
+It's a simple wrapper around SSLSocketFactory which enables the protocol "TLSv1.2".
 
 * Ideal approach?
-if SDK > 19
-  do nothing
-elseif Google Play services available and up to date
+if Google Play services available and up to date
   install security provider
+else if SDK > 19
+  do nothing (at least TLS 1.2 works)
 else
-  set SSLSocketFactory to DeprecatedTLSSocketFactory
+  set SSLSocketFactory to DeprecatedTLSSocketFactory (enable TLS 1.2)
 
 * About checking with https://www.howsmyssl.com/
 If you use the DeprecatedTLSSocketFactory it will always say "Your SSL client is Bad" because the
