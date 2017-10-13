@@ -10,17 +10,17 @@
       android:id="@+id/webview"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:layout_alignParentLeft="true"
-      android:layout_alignParentTop="true"
-      android:layout_marginTop="20dp"
-      android:layout_marginBottom="20dp"
-      />
+      android:layout_below="@+id/testUrl"
+      android:layout_alignParentRight="true"
+      android:layout_alignParentEnd="true"
+      android:layout_marginRight="7dp"
+      android:layout_marginEnd="7dp" />
 
   <TextView
       android:id="@+id/help"
       android:layout_width="match_parent"
       android:layout_height="20dp"
-      android:text="Open Observatory by Mozilla's list of &quot;perfect&quot; sites"
+      android:text="Tap to open Mozilla's list of &quot;perfect&quot; sites"
       android:background="#AAFFFFFF"
       android:layout_alignParentLeft="true"
       android:layout_alignParentTop="true"
@@ -31,20 +31,23 @@
       android:id="@+id/testUrl"
       android:layout_width="match_parent"
       android:layout_height="20dp"
-      android:inputType="textPersonName"
-      android:text="https://mastodon.expert/"
-      android:background="#AAFFFFFF"
+      android:text="https://www.howsmyssl.com/"
+      android:inputType="text"
+      android:maxLines="1"
+      android:imeOptions="actionGo"
+      android:background="#FFAAAAAA"
+      android:layout_below="@+id/help"
       android:layout_alignParentLeft="true"
-      android:layout_alignParentBottom="true"
-      />
+      android:layout_alignParentStart="true" />
 
-  <Button android:id="@+id/togglefix"
+  <Button android:id="@+id/sslSocketFactoryToggle"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:text="Fix"
-      android:onClick="toggleFix"
+      android:text="SSL toggle"
+      android:onClick="sslSocketFactoryToggle"
+      android:layout_below="@+id/help"
       android:layout_alignParentRight="true"
-      android:layout_above="@id/testUrl"
-      />
+      android:layout_alignParentEnd="true"
+      android:layout_marginTop="19dp" />
 
 </RelativeLayout>

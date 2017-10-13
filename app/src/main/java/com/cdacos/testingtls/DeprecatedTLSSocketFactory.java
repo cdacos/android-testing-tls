@@ -24,12 +24,12 @@ public class DeprecatedTLSSocketFactory extends SSLSocketFactory {
 
   public static DeprecatedTLSSocketFactory createInstance(TrustManager[] trustManagers) {
     try {
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+//      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
         return new DeprecatedTLSSocketFactory(trustManagers);
-      }
-      else {
-        return null;
-      }
+//      }
+//      else {
+//        return null;
+//      }
     }
     catch (Exception e) {
       throw new RuntimeException(e);
